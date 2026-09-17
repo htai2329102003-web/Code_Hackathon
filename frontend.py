@@ -8,7 +8,7 @@ class Frontend(Handler):
     def do_POST(self):
         if not self.allowed():
             return self.reply(403, {'error': 'forbidden'})
-        if self.path != '/api/explain':
+        if self.path not in {'/api/explain', '/api/search'}:
             return self.reply(404, {'error': 'not_found'})
         try:
             length = int(self.headers.get('Content-Length', '0'))
@@ -17,7 +17,7 @@ class Frontend(Handler):
             body = self.rfile.read(length)
             connection = http.client.HTTPConnection('127.0.0.1', 8000, timeout=55)
             try:
-                connection.request('POST', '/api/explain', body, {'Content-Type': self.headers.get('Content-Type', '')})
+                connection.request('POST', self.path, body, {'Content-Type': self.headers.get('Content-Type', '')})
                 response = connection.getresponse()
                 self.reply(response.status, response.read())
             finally:

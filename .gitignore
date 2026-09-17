@@ -4,5 +4,6 @@
 .venv/
 __pycache__/
 logs/
+logs/slide_embeddings.json
 eval/results/
 eval/private*

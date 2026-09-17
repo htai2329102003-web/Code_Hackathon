@@ -1,6 +1,6 @@
-# VLearn CP3 — selected-text explanation
+# VLearn CP3 — selected-text explanation and real slide search
 
-The same screenshot-based CP2 lesson page and layout. **Only “✨ Giải thích đoạn này” calls a real LLM.** Slide search, slide content, initial Tutor answer, ordinary chat input, progress and other CP2 controls remain mocked. No authentication, database, semantic search or new product features.
+The same screenshot-based CP2 lesson page and layout. **“✨ Giải thích đoạn này” and slide search call real AI-backed features.** Search indexes every page in the two real VLearn PDFs under `K4-3A-Day05-06-AI-Product-Hackathon/data/vlearn-pack/slides/`: `d1-slide-hackathon.pdf` and `d2-slide-hackathon.pdf` (58 pages total). Search uses OpenAI embeddings to rank semantically relevant pages and falls back to keyword matching if the provider is unavailable. Initial Tutor answer, ordinary chat input and progress remain mocked. No authentication or database.
 
 ## Install and configure (Python 3.11+)
 
@@ -10,7 +10,7 @@ From `C:\Users\My PC\OneDrive\Documents\ChatGPT\UI-VLearn-Tutor`:
 python -m pip install -r requirements.txt
 ```
 
-Dependencies: `openai==3.13.0`, `python-dotenv==1.2.3`. The servers use Python's standard library; no frontend packages or framework.
+Dependencies: `openai==3.13.0`, `python-dotenv==1.2.3`, `pypdf==6.1.3`. The servers use Python's standard library; no frontend packages or framework.
 
 Put the key in **`.env` in the project root, beside `server.py`**. If absent, copy `.env.example` to `.env`. Do not overwrite an existing configured file. Set:
 
@@ -37,17 +37,21 @@ Terminal 2:
 python frontend.py
 ```
 
-Frontend: **http://127.0.0.1:5173/**. It proxies `/api/explain` to port 8000. Both processes bind only to loopback. Stop with Ctrl+C. Alternatively the backend can serve the same UI directly at port 8000.
+Frontend: **http://127.0.0.1:5173/**. It proxies `/api/explain` and `/api/search` to port 8000. Both processes bind only to loopback. Stop with Ctrl+C. Alternatively the backend can serve the same UI directly at port 8000.
 
 **Do not use the old `python -m http.server` command in this project:** a general file server could expose `.env`, logs and evaluation data. The new servers serve only `/`, `index.html`, `styles.css`, and `app.js`. Neither file:// nor a generic static server supports the API route.
 
 ## Demo
 
 1. Open the frontend. The original question and answer are CP2 fixtures.
-2. Search **embedding là gì** and click the first **Mở slide** result. This opens the sample embedding lesson with sufficient context.
-3. Drag-select **vector trong không gian nhiều chiều**, or click the underlined phrase (keyboard Enter also works).
-4. Click **✨ Giải thích đoạn này**. A pending message appears while the real API is called.
-5. The generated response is appended in the existing Tutor. The original answer remains intact.
+2. Search **embedding là gì** or **problem statement**. Results come from the two real PDFs and show the source file, page and extracted text.
+3. Click **Mở trang** to open the selected PDF page's extracted content in the viewer.
+4. Search **embedding là gì** and click a relevant result with embedding context before testing the selected-text explanation.
+5. Drag-select **vector trong không gian nhiều chiều**, or click the underlined phrase (keyboard Enter also works).
+6. Click **✨ Giải thích đoạn này**. A pending message appears while the real API is called.
+7. The generated response is appended in the existing Tutor. The original answer remains intact.
+
+The search endpoint is `POST /api/search` with `{ "query": "embedding" }`. It extracts page text with `pypdf`, batches page embeddings using `text-embedding-3-small`, caches only document vectors under `logs/slide_embeddings.json`, and embeds each query before ranking pages by cosine similarity. The cache contains no API key. If no key is configured or an embedding request fails, the endpoint returns a transparent keyword-search fallback and labels the result mode.
 
 The initial title slide deliberately lacks embedding context: selecting the phrase there may produce `no_grounding`. Open the first search result for the grounded demonstration. The exact wording is generated and may vary.
 

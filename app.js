@@ -6,11 +6,6 @@ const slides = {
   rag: {day:'Day 04 · Retrieval Augmented Generation', title:'Tìm kiếm bằng vector', page:7, description:'Vector embedding được sử dụng để truy xuất những đoạn nội dung có ý nghĩa gần với câu hỏi.', example:['Câu hỏi','→','Nội dung liên quan'], caption:'RAG kết hợp nội dung được truy xuất với câu trả lời của mô hình.'},
   data: {day:'Day 02 · Biểu diễn dữ liệu', title:'Từ dữ liệu đến vector', page:15, description:'Các phương pháp embedding chuyển văn bản, hình ảnh hoặc âm thanh thành những dãy số để máy tính so sánh.', example:['Văn bản','→','Vector'], caption:'Ví dụ minh họa: “mèo” và “chó” gần nhau hơn “mèo” và “ô tô”.'}
 };
-const results = [
-  {key:'embedding',title:'Day 03 — Embedding & Vector Search',page:12,snippet:'...biểu diễn dữ liệu dưới dạng vector...'},
-  {key:'rag',title:'Day 04 — Retrieval Augmented Generation',page:7,snippet:'...vector embedding được sử dụng để truy xuất...'},
-  {key:'data',title:'Day 02 — Biểu diễn dữ liệu',page:15,snippet:'...các phương pháp embedding...'}
-];
 let currentKey = 'intro', currentPage = 1, zoom = 100, selectedText = '';
 let selectedMessage = null, pendingExplanation = null;
 // Synthetic lesson material, not official/private hackathon data.
@@ -31,15 +26,35 @@ function renderSlide(key, page = slides[key].page) {
   const context = $('.context-label'); if (context) context.textContent = `Đang mở: ${s.day} · slide ${page}`;
 }
 function closeSearch() { $('#search-results').hidden = true; $('#lesson-list').hidden = false; }
-$('#search-form').addEventListener('submit', event => {
+function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[character])); }
+function renderSearchResult(result) {
+  currentKey = 'embedding'; currentPage = result.page; zoom = 100;
+  courseContexts.embedding = result.text;
+  const pdfUrl = `/api/slides/${encodeURIComponent(result.file)}#page=${result.page}&zoom=page-width`;
+  $('#slide-viewer').innerHTML = `<iframe class="pdf-slide" src="${pdfUrl}" title="${escapeHtml(result.file)} · trang ${result.page}" loading="eager"></iframe>`;
+  $('#slide-number').textContent = result.page; $('#zoom-label').textContent = '100%';
+  $('#prev-slide').disabled = result.page === 1; $('#next-slide').disabled = result.page === 29;
+  $('#lecturer-note').textContent = `Đã mở trang ${result.page} từ ${result.file}.`;
+  const context = $('.context-label'); if (context) context.textContent = `Đang mở: ${result.file} · trang ${result.page}`;
+}
+$('#search-form').addEventListener('submit', async event => {
   event.preventDefault();
   const query = $('#search-input').value.trim().toLowerCase();
   if (!query) { closeSearch(); return; }
-  const matches = /embedding|vector/.test(query);
   $('#lesson-list').hidden = true; $('#search-results').hidden = false;
-  $('#search-results').innerHTML = `<div class="results-heading"><span>${matches ? '3 kết quả · Bài giảng đã học' : 'Kết quả tìm kiếm'}</span><button id="close-search">Đóng ×</button></div>` + (matches ? results.map(r => `<article class="result-card"><h3>${r.title}</h3><span class="slide-ref">Slide ${r.page}</span><p>${r.snippet}</p><button data-open="${r.key}">Mở slide <span aria-hidden="true">↗</span></button></article>`).join('') : '<p class="empty-state">Chưa tìm thấy slide phù hợp. Hãy thử từ khóa khác.</p>');
-  $('#close-search').onclick = closeSearch;
-  document.querySelectorAll('[data-open]').forEach(button => button.onclick = () => {renderSlide(button.dataset.open);closeSearch();$('#search-input').value = '';$('#slide-viewer').setAttribute('tabindex','-1');$('#slide-viewer').focus({preventScroll:true});});
+  $('#search-results').innerHTML = '<p class="empty-state">Đang tìm trong 2 file PDF thật…</p>';
+  try {
+    const response = await fetch('/api/search', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({query})});
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Không tìm được slide.');
+    const results = data.results || [];
+    $('#search-results').innerHTML = `<div class="results-heading"><span>${results.length} kết quả · ${escapeHtml(data.mode === 'semantic' ? 'AI semantic search' : 'keyword fallback')}</span><button id="close-search">Đóng ×</button></div>` + (results.length ? results.map((result, index) => `<article class="result-card"><h3>${escapeHtml(result.lesson)}</h3><span class="slide-ref">${escapeHtml(result.file)} · trang ${result.page}</span><p>${escapeHtml(result.snippet)}</p><button data-result-index="${index}">Mở trang <span aria-hidden="true">↗</span></button></article>`).join('') : '<p class="empty-state">Chưa tìm thấy trang phù hợp trong hai PDF.</p>');
+    $('#close-search').onclick = closeSearch;
+    document.querySelectorAll('[data-result-index]').forEach(button => button.onclick = () => {renderSearchResult(results[Number(button.dataset.resultIndex)]);closeSearch();$('#search-input').value = '';$('#slide-viewer').setAttribute('tabindex','-1');$('#slide-viewer').focus({preventScroll:true});});
+  } catch (error) {
+    $('#search-results').innerHTML = `<div class="results-heading"><span>Kết quả tìm kiếm</span><button id="close-search">Đóng ×</button></div><p class="empty-state">${escapeHtml(error.message)}</p>`;
+    $('#close-search').onclick = closeSearch;
+  }
 });
 $('#search-input').addEventListener('input', () => {if (!$('#search-input').value.trim()) closeSearch();});
 $('#slides-toggle').onclick = () => { const collapsed = !$('#slide-items').hidden; $('#slide-items').hidden = collapsed; $('#slides-toggle').setAttribute('aria-expanded',String(!collapsed)); };
@@ -47,7 +62,7 @@ document.querySelectorAll('[data-slide]').forEach(button => button.onclick = () 
 function changePage(delta) {const page = Math.max(1,Math.min(20,currentPage + delta));renderSlide(page === 1 ? 'intro' : 'embedding',page);}
 $('#prev-slide').onclick = () => changePage(-1); $('#next-slide').onclick = () => changePage(1);
 $('#previous-lesson').onclick = () => renderSlide('data'); $('#next-lesson').onclick = () => renderSlide('rag');
-function changeZoom(delta) {zoom = Math.max(75,Math.min(150,zoom+delta));$('.slide-inner').style.transform = `scale(${zoom/100})`;$('#zoom-label').textContent = zoom+'%';}
+function changeZoom(delta) {zoom = Math.max(75,Math.min(150,zoom+delta));const slideInner = $('.slide-inner');const pdfSlide = $('.pdf-slide');if (slideInner) slideInner.style.transform = `scale(${zoom/100})`;if (pdfSlide) pdfSlide.style.transform = `scale(${zoom/100})`;$('#zoom-label').textContent = zoom+'%';}
 $('#zoom-out').onclick = () => changeZoom(-10); $('#zoom-in').onclick = () => changeZoom(10);
 function toggleNotes() {$('#personal-note').hidden = !$('#personal-note').hidden;if (!$('#personal-note').hidden) $('#personal-note').focus();}
 $('#note-button').onclick = toggleNotes; $('#notebook').onclick = toggleNotes;
