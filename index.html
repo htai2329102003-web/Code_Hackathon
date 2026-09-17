@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bài 3 · DAY03 — VLearn CP3</title>
+  <link rel="icon" href="data:,"><link rel="stylesheet" href="styles.css"><script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="back" aria-hidden="true">←</span><h1>Bài 3 · DAY03</h1>
+    <div class="progress"><span>0/19 bài</span><span class="progress-track"></span></div>
+    <button class="ask-ai" id="ask-ai"><span class="sparkle">✦</span> Đặt câu hỏi với AI</button>
+    <span class="request">♧ &nbsp;Gửi yêu cầu</span><span class="avatar">H</span>
+  </header>
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Nội dung bài học">
+      <div class="sidebar-heading"><h2>NỘI DUNG BÀI HỌC</h2><span aria-hidden="true">×</span></div>
+      <form id="search-form" class="search-form" role="search">
+        <div class="search-box"><input id="search-input" aria-label="Tìm trong các bài giảng đã học" placeholder="Tìm trong các bài giảng đã học..." autocomplete="off"><button type="submit" aria-label="Tìm kiếm" title="Tìm kiếm">⌕</button></div>
+      </form>
+      <section id="search-results" hidden aria-label="Kết quả tìm kiếm" aria-live="polite"></section>
+      <nav id="lesson-list" aria-label="Danh sách bài học">
+        <button class="section-heading" id="slides-toggle" aria-expanded="true">Slides <span>⌄</span></button>
+        <div id="slide-items">
+          <button class="lesson-item" data-slide="intro"><span class="slide-icon">▱</span><span class="truncate">day03-tu-chatbot-den-agentic-agent</span></button>
+          <button class="lesson-item active" data-slide="intro"><span class="slide-icon">▱</span><span class="truncate">Day 03_ Chatbot vs ReAct Agent</span><b>Đang học</b></button>
+          <button class="lesson-item" data-slide="embedding"><span class="slide-icon">▱</span><span class="truncate">Day03: Từ chatbot đến agentic agent</span></button>
+          <button class="lesson-item" data-slide="rag"><span class="slide-icon">▱</span><span class="truncate">Day03: from-chatbot-to-agentic-agent</span></button>
+        </div>
+        <details class="lesson-section"><summary>Videos</summary><p>Video minh họa chưa có trong bản CP2.</p></details>
+        <div class="lab-row"><span>♙</span> CHATBOT VS REACT AGENT <span>›</span></div>
+        <details class="lesson-section"><summary>KC &amp; Luyện tập</summary><p>Nội dung luyện tập chưa có trong bản CP2.</p></details>
+      </nav>
+    </aside>
+    <section class="lesson-center" aria-label="Bài giảng">
+      <div class="viewer-wrap">
+        <article class="slide" id="slide-viewer" aria-live="polite"></article>
+        <div class="viewer-toolbar">
+          <div class="tools"><button title="Ghi chú" aria-label="Mở ghi chú" id="note-button">♧</button><span class="tool-separator"></span><span aria-hidden="true">◫</span><div class="zoom"><button id="zoom-out" aria-label="Thu nhỏ">⊖</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="Phóng to">⊕</button></div><span class="optional-tool">T</span><span class="optional-tool">♧</span></div>
+          <div class="slide-pagination"><button id="prev-slide" aria-label="Slide trước">‹</button><span id="slide-number">1</span><span>/ 20</span><button id="next-slide" aria-label="Slide sau">›</button></div>
+          <button class="notebook" id="notebook">▱ &nbsp; Sổ ghi chú</button>
+        </div>
+        <section class="lecturer-notes"><h3>▱ &nbsp;Ghi chú của giảng viên</h3><p id="lecturer-note">Chưa có ghi chú cho phần này.</p><textarea id="personal-note" hidden placeholder="Ghi chú của bạn (chỉ lưu trong phiên này)..." aria-label="Ghi chú của bạn"></textarea></section>
+      </div>
+      <div class="feedback" aria-label="Đánh giá bài giảng"><button aria-label="Hữu ích" title="Hữu ích">♧</button><button aria-label="Chưa hữu ích" title="Chưa hữu ích">♧</button><button aria-label="Đánh dấu" title="Đánh dấu">⚑</button><span id="feedback-status" role="status"></span></div>
+      <footer class="lesson-footer"><button id="previous-lesson">‹ &nbsp; Bài trước</button><button class="primary" id="next-lesson">Đi tới bài tiếp theo &nbsp; ›</button></footer>
+      <details class="prototype-notes"><summary>Ghi chú prototype · CP3</summary><p>Slide, tìm kiếm và hội thoại ban đầu vẫn là dữ liệu mẫu. Chỉ “Giải thích đoạn này” gọi AI thật qua backend. Ngữ cảnh bài học là nội dung tự tạo, không phải dữ liệu chính thức.</p><p><b>A.</b> Không có kết quả tìm kiếm: “Chưa tìm thấy slide phù hợp. Hãy thử từ khóa khác.”</p><p><b>B.</b> Chọn đoạn mơ hồ: AI hỏi lại để làm rõ.</p><p><b>C.</b> Ngữ cảnh chưa đủ hoặc yêu cầu ngoài phạm vi: AI thông báo giới hạn thay vì đoán.</p><p><b>D.</b> Bạn có thể chọn đoạn khác hoặc nhập câu hỏi riêng. Ô chat thường vẫn dùng phản hồi mẫu CP2.</p><button id="reset-demo">Bắt đầu lại demo</button></details>
+    </section>
+    <aside class="tutor" aria-label="Trợ giảng AI">
+      <header class="tutor-header"><span class="sparkle">✦</span><h2>Trợ giảng AI</h2><button id="new-chat">＋ Chat mới</button><span class="header-symbol" aria-hidden="true">◴</span><span class="header-symbol" aria-hidden="true">⊟</span></header>
+      <div class="conversation" id="conversation" role="log" aria-live="polite" aria-label="Cuộc trò chuyện với Tutor"></div>
+      <div class="composer-area"><form id="chat-form" class="composer"><textarea id="chat-input" rows="1" placeholder="Hỏi bất cứ điều gì..." aria-label="Câu hỏi cho Trợ giảng AI"></textarea><button type="submit" id="send-message" aria-label="Gửi câu hỏi" disabled>↑</button></form><p>Trợ giảng AI có thể sai — hãy đối chiếu với bài giảng.</p></div>
+    </aside>
+  </main>
+  <button id="explain-selection" class="selection-action" hidden>✨ Giải thích đoạn này</button>
+</body>
+</html>
